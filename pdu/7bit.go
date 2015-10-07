@@ -45,6 +45,26 @@ func Encode7Bit(str string) []byte {
 	return pack7Bit(raw7)
 }
 
+// Encode7Bit encodes the given UTF-8 text into GSM 7-bit (3GPP TS 23.038)
+// encoding with packing. No packing of bits
+func Encode7BitNoPack(str string) []byte {
+	raw7 := make([]byte, 0, len(str))
+	for _, r := range str {
+		i := gsmTable.Index(r)
+		if i < 0 {
+			b := gsmEscapes.to7Bit(r)
+			if b != byte(unknown) {
+				raw7 = append(raw7, Esc, b)
+			} else {
+				raw7 = append(raw7, b)
+			}
+			continue
+		}
+		raw7 = append(raw7, byte(i))
+	}
+	return raw7
+}
+
 // Decode7Bit decodes the given GSM 7-bit packed octet data (3GPP TS 23.038) into a UTF-8 encoded string.
 func Decode7Bit(octets []byte) (str string, err error) {
 	raw7 := unpack7Bit(octets)
