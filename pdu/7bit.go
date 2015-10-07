@@ -68,6 +68,30 @@ func Decode7Bit(octets []byte) (str string, err error) {
 	return
 }
 
+// Decode7Bit decodes the given GSM 7-bit packed octet data (3GPP TS 23.038)
+// into a UTF-8 encoded string. No unpacking of the octets
+func Decode7BitNoUnpack(octets []byte) (str string, err error) {
+	raw7 := octets
+	var escaped bool
+	var r rune
+	for _, b := range raw7 {
+		if b > max {
+			err = ErrUnexpectedByte
+			return
+		} else if escaped {
+			r = gsmEscapes.from7Bit(b)
+			escaped = false
+		} else if b == Esc {
+			escaped = true
+			continue
+		} else {
+			r = gsmTable.Rune(int(b))
+		}
+		str += string(r)
+	}
+	return
+}
+
 func pad(n, block int) int {
 	if n%block == 0 {
 		return n
